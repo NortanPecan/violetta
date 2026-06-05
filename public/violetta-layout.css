@@ -1,0 +1,70 @@
+/* Violett a custom form avatar layout (left narrow column: sprite img + "why" caption below it; right: normal chat response text).
+   Applied via markdown tables in message content (see app.py rendering).
+   Targets tables produced by the layout (hides chrome for clean side-by-side look).
+   Broad but safe: no other tables used in Violetta chat messages.
+*/
+
+table {
+  border: none !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 0 !important;
+  table-layout: fixed !important;
+}
+
+table td {
+  border: none !important;
+  padding: 4px 6px !important;
+  vertical-align: top !important;
+}
+
+/* Left column: avatar area (fixed narrow width so img + caption stack nicely) */
+table td:first-child {
+  width: 105px !important;
+  min-width: 105px !important;
+  max-width: 105px !important;
+  text-align: center !important;
+  padding-right: 8px !important;
+}
+
+table td:first-child img {
+  width: 100px !important;
+  max-height: 100px !important;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 2px auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Caption ("why" / form phrase) below the img in left cell */
+table td:first-child em,
+table td:first-child i {
+  font-size: 0.7rem !important;
+  line-height: 1.15 !important;
+  display: block;
+  color: #555;
+  font-style: italic;
+}
+
+/* Hide markdown table header (first tr) + separator row (second) so only the data row is visible as layout grid.
+   The md source uses a dummy header + sep + body row for parser compatibility.
+*/
+table thead,
+table tr:nth-child(2) {
+  display: none !important;
+}
+
+/* Optional: hide Chainlit's built-in small avatar (next to author name) so the embedded pixel sprite is the prominent "avatar".
+   If this hides too much (e.g. for user messages), refine selector or remove.
+*/
+.avatar,
+[class*="avatar"],
+.step .avatar {
+  display: none !important;
+}
+
+/* Make the right cell (answer text) flow naturally like normal chat content */
+table td:last-child {
+  /* let it take remaining width */
+}

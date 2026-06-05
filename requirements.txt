@@ -1,0 +1,14 @@
+# Violett a - Personal AI Daemon (Chainlit)
+chainlit>=1.1.0
+openai>=1.30.0
+python-dotenv>=1.0.0
+
+# Long-term memory (Mem0 self-hosted local)
+mem0ai>=0.1.30
+chromadb
+sentence-transformers
+
+# For future image generation / form visualization you can add:
+# pillow
+# For more advanced async DB if needed:
+# aiosqlite

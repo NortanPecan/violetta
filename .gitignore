@@ -1,0 +1,23 @@
+# Violett a local files
+violetta_memory.db
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.db-journal
+*.db-wal
+*.db-shm
+mem0_data/
+*.log
+._test_*.txt
+test_*.py
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Chainlit legacy
+.chainlit/
+chainlit.md

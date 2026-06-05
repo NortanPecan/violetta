@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Виолетта — твой AI-даэмон</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+    
+    :root {
+      --primary: #6366f1;
+    }
+    
+    body {
+      font-family: 'Inter', system_ui, sans-serif;
+    }
+    
+    .font-display {
+      font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif;
+      font-weight: 600;
+    }
+
+    .chat-container {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      position: relative;
+    }
+
+    .user-bubble {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .assistant-bubble {
+      background: #374151;
+      color: #f3f4f6;
+      border-bottom-left-radius: 4px;
+    }
+
+    .avatar-container {
+      width: 72px;
+      flex-shrink: 0;
+    }
+
+    .form-caption {
+      font-size: 0.7rem;
+      line-height: 1.1;
+      color: #9ca3af;
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+
+    .pixel-sprite {
+      image-rendering: pixelated;
+      border: 2px solid #4b5563;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    .chat-scroll {
+      scroll-behavior: smooth;
+    }
+
+    .daemon-header {
+      background: linear-gradient(to right, #1f2937, #111827);
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+  <div class="max-w-4xl mx-auto h-screen flex flex-col">
+    <!-- Header -->
+    <div class="daemon-header px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+      <div class="flex items-center gap-x-3">
+        <div class="w-9 h-9 bg-indigo-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl">V</div>
+        <div>
+          <div class="font-display text-2xl tracking-tighter font-semibold">Виолетта</div>
+          <div class="text-[10px] text-zinc-500 -mt-1">твой честный AI-даэмон</div>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-x-2 text-xs">
+        <button id="model-switcher"
+                onclick="showModelSwitcher()"
+                class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-950 transition-colors rounded-full flex items-center gap-x-1.5 border border-zinc-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                title="Переключить модель (только в пределах cloud или local)">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+          <span id="model-status" class="text-zinc-400 font-mono text-[11px]">gemma4:31b-cloud (cloud)</span>
+        </button>
+        
+        <button onclick="showFormsGallery()" 
+                class="px-3 py-1.5 text-xs bg-zinc-900 hover:bg-zinc-800 transition-colors rounded-xl border border-zinc-800 flex items-center gap-x-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span>Формы</span>
+        </button>
+
+        <button onclick="showMemoryModal()" 
+                class="px-3 py-1.5 text-xs bg-zinc-900 hover:bg-zinc-800 transition-colors rounded-xl border border-zinc-800 flex items-center gap-x-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2" />
+          </svg>
+          <span>Память</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat" 
+         class="flex-1 overflow-y-auto p-6 space-y-6 chat-scroll bg-zinc-900/30">
+      <!-- Messages injected by JS -->
+    </div>
+
+    <!-- Input -->
+    <div class="p-4 border-t border-zinc-800 bg-zinc-950">
+      <div class="flex gap-2 items-end max-w-3xl mx-auto">
+        <div class="flex-1 relative">
+          <textarea id="input" rows="1"
+                    class="w-full bg-zinc-900 border border-zinc-800 focus:border-indigo-500/70 transition-colors rounded-3xl px-5 py-3.5 text-sm placeholder-zinc-500 resize-none outline-none"
+                    placeholder="Расскажи, что на душе... (или «стань выдрой»)"
+                    onkeydown="if (event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+        </div>
+        <button onclick="sendMessage()"
+                class="h-11 w-11 flex-shrink-0 bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 transition-all rounded-2xl flex items-center justify-center shadow-inner">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+          </svg>
+        </button>
+      </div>
+      <div class="text-[10px] text-zinc-600 mt-2 text-center">Виолетта помнит контекст. Радикальная честность — по умолчанию.</div>
+    </div>
+  </div>
+
+  <!-- Forms Gallery Modal -->
+  <div id="forms-modal" onclick="hideFormsGallery()" class="hidden fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center">
+    <div onclick="event.stopImmediatePropagation()" 
+         class="bg-zinc-900 w-full sm:w-[520px] sm:rounded-3xl sm:m-4 p-5 border border-zinc-800 rounded-t-3xl max-h-[70vh] overflow-auto">
+      <div class="flex justify-between items-center mb-4 px-1">
+        <div class="font-semibold">Возможные формы</div>
+        <button onclick="hideFormsGallery()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <div id="forms-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+        <!-- populated by JS -->
+      </div>
+      <div class="text-[10px] text-zinc-500 mt-4 px-1">Нажми на форму — я сразу отреагирую и приму её.</div>
+    </div>
+  </div>
+
+  <!-- Memory Modal -->
+  <div id="memory-modal" onclick="hideMemoryModal()" class="hidden fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center">
+    <div onclick="event.stopImmediatePropagation()" 
+         class="bg-zinc-900 w-full sm:w-[560px] sm:rounded-3xl sm:m-4 p-5 border border-zinc-800 rounded-t-3xl max-h-[70vh] overflow-auto">
+      <div class="flex justify-between items-center mb-4 px-1">
+        <div class="font-semibold">Долгосрочная память (Mem0)</div>
+        <button onclick="hideMemoryModal()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <div id="memory-list" class="space-y-2 text-sm">
+        <!-- populated by JS -->
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="refreshMemories()" class="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700">Обновить</button>
+        <button onclick="clearAllMemories()" class="px-3 py-1 text-xs bg-red-900/70 hover:bg-red-900 text-red-200 rounded-lg border border-red-800">Очистить всё</button>
+      </div>
+      <div class="text-[10px] text-zinc-500 mt-3 px-1">Память сохраняет только важное (цели, паттерны, эмоции, события). Нажми на крестик чтобы удалить конкретное воспоминание.</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind script config
+    function initTailwind() {
+      document.documentElement.style.setProperty('--accent', '#6366f1');
+    }
+    
+    let currentAssistantBubble = null;
+
+    async function loadHistory() {
+      const chat = document.getElementById('chat');
+      chat.innerHTML = '';
+      
+      try {
+        const res = await fetch('/api/history');
+        const history = await res.json();
+        
+        history.forEach(msg => {
+          if (msg.role === 'user') {
+            appendUserMessage(msg.content, false);
+          } else {
+            appendAssistantMessage(
+              msg.content, 
+              msg.form_description || null, 
+              msg.sprite_url || null, 
+              false
+            );
+          }
+        });
+        
+        // Scroll to bottom
+        chat.scrollTop = chat.scrollHeight;
+      } catch (e) {
+        console.error('Failed to load history', e);
+      }
+    }
+
+    async function loadCurrentModel() {
+      try {
+        const res = await fetch('/api/model');
+        const data = await res.json();
+        const el = document.getElementById('model-status');
+        if (el) {
+          const label = data.display || data.model || 'gemma4:31b-cloud (cloud)';
+          const loc = (data.backend === 'cloud') ? 'cloud' : 'локально';
+          el.textContent = `${label}`;
+          // store for switcher
+          el.dataset.backend = data.backend || 'ollama';
+          el.dataset.model = data.model || '';
+        }
+      } catch (e) {
+        console.warn('Could not fetch current model', e);
+      }
+    }
+
+    // --- Model switcher (dropdown/modal) ---
+    let _modelModalEl = null;
+
+    function showToast(msg, ms = 2800) {
+      let t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-2xl bg-zinc-800 border border-zinc-700 text-sm shadow-xl z-[999] hidden';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      t.classList.add('flex', 'items-center', 'gap-2');
+      setTimeout(() => {
+        t.classList.add('hidden');
+        t.classList.remove('flex');
+      }, ms);
+    }
+
+    async function showModelSwitcher() {
+      try {
+        const res = await fetch('/api/models');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        const curr = data.current || '';
+        const currB = data.current_backend || 'ollama';
+        const locals = data.local || [];
+        const clouds = data.cloud || [];
+
+        // create / reuse modal
+        if (!_modelModalEl) {
+          _modelModalEl = document.createElement('div');
+          _modelModalEl.id = 'model-modal';
+          _modelModalEl.className = 'fixed inset-0 z-[100] flex items-start justify-center pt-16 bg-black/60';
+          _modelModalEl.innerHTML = `
+            <div class="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-lg mx-4 shadow-2xl overflow-hidden">
+              <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                <div class="font-semibold text-sm">Выбрать модель</div>
+                <button onclick="closeModelSwitcher()" class="text-zinc-400 hover:text-white px-2">✕</button>
+              </div>
+              <div class="p-4 grid grid-cols-2 gap-4 text-sm">
+                <!-- Cloud -->
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-emerald-400 mb-1.5 px-1">Cloud (через ollama proxy)</div>
+                  <div id="cloud-list" class="space-y-0.5"></div>
+                </div>
+                <!-- Local -->
+                <div>
+                  <div class="text-[10px] uppercase tracking-widest text-amber-400 mb-1.5 px-1">Local (ollama pulled)</div>
+                  <div id="local-list" class="space-y-0.5"></div>
+                </div>
+              </div>
+              <div class="px-4 py-2.5 bg-zinc-950 border-t border-zinc-800 text-[10px] text-zinc-500">
+                Переключение только внутри одной группы. Cross cloud↔local требует рестарта сервера (потеря контекста в памяти).
+              </div>
+            </div>
+          `;
+          document.body.appendChild(_modelModalEl);
+          _modelModalEl.addEventListener('click', (e) => {
+            if (e.target === _modelModalEl) closeModelSwitcher();
+          });
+        }
+
+        // populate lists
+        const cloudList = _modelModalEl.querySelector('#cloud-list');
+        const localList = _modelModalEl.querySelector('#local-list');
+        cloudList.innerHTML = '';
+        localList.innerHTML = '';
+
+        function makeItem(name, isCurrent, group) {
+          const div = document.createElement('div');
+          div.className = `px-2.5 py-1.5 rounded-xl cursor-pointer border text-xs flex items-center justify-between ${isCurrent ? 'bg-zinc-800 border-indigo-500/60' : 'border-transparent hover:bg-zinc-800/70 hover:border-zinc-700'}`;
+          div.innerHTML = `
+            <span class="font-mono">${name}</span>
+            ${isCurrent ? '<span class="text-[9px] text-indigo-400">текущая</span>' : ''}
+          `;
+          div.onclick = async () => {
+            if (isCurrent) { closeModelSwitcher(); return; }
+            const newB = (name.includes('cloud') || name.includes(':cloud') || ['kimi','minimax','glm','qwen'].some(p => name.toLowerCase().startsWith(p))) ? 'cloud' : 'ollama';
+            if (currB !== newB && currB !== 'xai') {
+              alert('Невозможно переключаться между cloud и local без перезапуска сервера. Контекст будет потерян.');
+              return;
+            }
+            try {
+              const swRes = await fetch('/api/model/switch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: name })
+              });
+              const s = await swRes.json();
+              if (s.success) {
+                // update pill
+                const el = document.getElementById('model-status');
+                if (el) {
+                  el.textContent = s.display || name + (newB==='cloud' ? ' (cloud)' : '');
+                  el.dataset.model = name;
+                  el.dataset.backend = s.backend || newB;
+                }
+                showToast(s.message || 'Модель переключена. История сохранена.');
+                closeModelSwitcher();
+                // history already in sqlite + DOM, nothing to reload
+              } else {
+                if (s.requires_restart) {
+                  alert(s.error || 'Нужен рестарт для переключения между группами.');
+                } else {
+                  alert('Не удалось переключить: ' + (s.error || 'unknown'));
+                }
+              }
+            } catch (e) {
+              alert('Ошибка переключения: ' + e);
+            }
+          };
+          return div;
+        }
+
+        clouds.forEach(n => cloudList.appendChild(makeItem(n, n === curr, 'cloud')));
+        if (clouds.length === 0) cloudList.innerHTML = '<div class="text-xs text-zinc-500 px-1 py-1">Нет известных cloud</div>';
+
+        locals.forEach(n => localList.appendChild(makeItem(n, n === curr, 'local')));
+        if (locals.length === 0) localList.innerHTML = '<div class="text-xs text-zinc-500 px-1 py-1">Нет локальных (запустите ollama pull)</div>';
+
+        _modelModalEl.style.display = 'flex';
+      } catch (e) {
+        console.error(e);
+        alert('Не удалось загрузить список моделей: ' + e);
+      }
+    }
+
+    function closeModelSwitcher() {
+      if (_modelModalEl) _modelModalEl.style.display = 'none';
+    }
+
+    function appendUserMessage(text, scroll = true) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      div.className = 'flex justify-end';
+      div.innerHTML = `
+        <div class="message-bubble user-bubble max-w-[70%] text-sm">
+          ${escapeHtml(text)}
+        </div>
+      `;
+      chat.appendChild(div);
+      if (scroll) chat.scrollTop = chat.scrollHeight;
+      return div;
+    }
+
+    function appendAssistantMessage(text, formDescription, spriteUrl, scroll = true) {
+      const chat = document.getElementById('chat');
+      const container = document.createElement('div');
+      container.className = 'flex gap-3';
+      
+      let leftHTML = '';
+      
+      if (spriteUrl) {
+        // Avatar left — ONLY the picture, no caption text (form is visual only)
+        leftHTML = `
+          <div class="avatar-container">
+            <img src="${spriteUrl}" 
+                 class="pixel-sprite w-[78px] h-[78px] object-cover rounded-2xl shadow" 
+                 alt="текущая форма" title="${escapeHtml(formDescription || '')}">
+          </div>
+        `;
+      } else {
+        // Fallback simple avatar
+        leftHTML = `
+          <div class="avatar-container">
+            <div class="w-[78px] h-[78px] bg-zinc-700 rounded-2xl flex items-center justify-center text-3xl">🐾</div>
+          </div>
+        `;
+      }
+      
+      const rightText = text || '';
+      
+      container.innerHTML = `
+        ${leftHTML}
+        <div class="flex-1 pt-1">
+          <div class="message-bubble assistant-bubble text-[13.5px] leading-snug">
+            ${escapeHtml(rightText)}
+          </div>
+        </div>
+      `;
+      
+      chat.appendChild(container);
+      if (scroll) chat.scrollTop = chat.scrollHeight;
+      
+      return container;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('input');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const chat = document.getElementById('chat');
+      
+      // Append user immediately
+      appendUserMessage(text);
+      
+      // Create assistant placeholder bubble (will be upgraded on final)
+      const assistantContainer = document.createElement('div');
+      assistantContainer.className = 'flex gap-3';
+      assistantContainer.innerHTML = `
+        <div class="avatar-container">
+          <div class="w-[78px] h-[78px] bg-zinc-800 rounded-2xl flex items-center justify-center">
+            <div class="animate-pulse text-zinc-500 text-xs">...</div>
+          </div>
+        </div>
+        <div class="flex-1 pt-1">
+          <div class="message-bubble assistant-bubble text-[13.5px] leading-snug min-h-[42px]">
+            <span class="thinking">Виолетта думает...</span>
+          </div>
+        </div>
+      `;
+      chat.appendChild(assistantContainer);
+      chat.scrollTop = chat.scrollHeight;
+      
+      const textDiv = assistantContainer.querySelector('.message-bubble');
+      
+      input.value = '';
+      
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        
+        if (!response.ok) throw new Error('Server error');
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let liveText = '';
+        let formData = null;
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Parse SSE events
+          let lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+          
+          for (let line of lines) {
+            if (!line.trim()) continue;
+            
+            const eventMatch = line.match(/event: (\w+)/);
+            const dataMatch = line.match(/data: (.+)/s);
+            
+            if (eventMatch && dataMatch) {
+              const eventType = eventMatch[1];
+              let data;
+              try { data = JSON.parse(dataMatch[1]); } catch(e) { continue; }
+              
+              if (eventType === 'token') {
+                liveText += data.text || '';
+                // live update the text area (raw for now)
+                textDiv.innerHTML = escapeHtml(liveText);
+                chat.scrollTop = chat.scrollHeight;
+              } 
+              else if (eventType === 'final') {
+                formData = data;
+                // Transform the bubble into the proper avatar layout
+                transformToAvatarLayout(assistantContainer, formData, liveText);
+              }
+            }
+          }
+        }
+        
+        // If no final came (fallback), make sure we have something
+        if (!formData && liveText) {
+          assistantContainer.innerHTML = `
+            <div class="avatar-container">
+              <div class="w-[78px] h-[78px] bg-zinc-700 rounded-2xl flex items-center justify-center text-xl">🐾</div>
+            </div>
+            <div class="flex-1 pt-1">
+              <div class="message-bubble assistant-bubble text-[13.5px] leading-snug">
+                ${escapeHtml(liveText)}
+              </div>
+            </div>
+          `;
+        }
+        
+      } catch (err) {
+        textDiv.innerHTML = `<span class="text-red-400 text-xs">Ошибка связи с даэмоном. Попробуй ещё раз.</span>`;
+        console.error(err);
+      }
+    }
+    
+    function transformToAvatarLayout(container, finalData, fallbackText) {
+      const chat = document.getElementById('chat');
+      const textToUse = finalData.clean_text || fallbackText || '';
+      
+      let left = '';
+      if (finalData.sprite_url) {
+        // ONLY the picture for the form — no text caption
+        left = `
+          <div class="avatar-container">
+            <img src="${finalData.sprite_url}" 
+                 class="pixel-sprite w-[78px] h-[78px] object-cover rounded-2xl shadow" 
+                 alt="текущая форма" title="${escapeHtml(finalData.form || '')}">
+          </div>
+        `;
+      } else {
+        left = `
+          <div class="avatar-container">
+            <div class="w-[78px] h-[78px] bg-zinc-700 rounded-2xl flex items-center justify-center text-3xl">🐾</div>
+          </div>
+        `;
+      }
+      
+      container.innerHTML = `
+        ${left}
+        <div class="flex-1 pt-1">
+          <div class="message-bubble assistant-bubble text-[13.5px] leading-snug">
+            ${escapeHtml(textToUse)}
+          </div>
+        </div>
+      `;
+      
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function showFormsGallery() {
+      const modal = document.getElementById('forms-modal');
+      const grid = document.getElementById('forms-grid');
+      grid.innerHTML = '<div class="col-span-4 text-center text-xs py-6 text-zinc-500">Загрузка...</div>';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      try {
+        const res = await fetch('/api/forms');
+        const forms = await res.json();
+        
+        grid.innerHTML = '';
+        
+        forms.forEach(f => {
+          const card = document.createElement('div');
+          card.className = 'cursor-pointer group';
+          card.innerHTML = `
+            <div class="aspect-square bg-zinc-800 rounded-2xl overflow-hidden border border-zinc-700 group-hover:border-indigo-500/40 transition-colors">
+              <img src="${f.url}" class="w-full h-full object-cover pixel-sprite" alt="${f.name}">
+            </div>
+            <div class="text-center mt-1.5 text-[10px] text-zinc-400 group-hover:text-zinc-300 transition-colors">${f.name}</div>
+          `;
+          card.onclick = () => {
+            hideFormsGallery();
+            const input = document.getElementById('input');
+            input.value = `стань ${f.key.replace(/_/g, ' ')}`;
+            input.focus();
+            // optional: auto-send
+            // setTimeout(() => sendMessage(), 120);
+          };
+          grid.appendChild(card);
+        });
+      } catch (e) {
+        grid.innerHTML = '<div class="col-span-4 text-center text-red-400 text-xs">Не удалось загрузить список форм</div>';
+      }
+    }
+    
+    function hideFormsGallery() {
+      const modal = document.getElementById('forms-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // --- Memory (Mem0) modal ---
+    async function showMemoryModal() {
+      const modal = document.getElementById('memory-modal');
+      const list = document.getElementById('memory-list');
+      list.innerHTML = '<div class="text-zinc-500 text-xs py-4">Загрузка воспоминаний...</div>';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      await refreshMemories(list);
+    }
+
+    function hideMemoryModal() {
+      const modal = document.getElementById('memory-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function refreshMemories(targetList = null) {
+      const list = targetList || document.getElementById('memory-list');
+      try {
+        const res = await fetch('/api/memories');
+        const data = await res.json();
+        list.innerHTML = '';
+        if (!data.memories || data.memories.length === 0) {
+          list.innerHTML = '<div class="text-zinc-400 text-xs py-2">Пока нет сохранённых воспоминаний.</div>';
+          return;
+        }
+        data.memories.forEach(m => {
+          const id = m.id || m.memory_id || '';
+          const text = m.memory || m.text || JSON.stringify(m);
+          const div = document.createElement('div');
+          div.className = 'flex justify-between items-start gap-2 bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-xs';
+          div.innerHTML = `
+            <div class="flex-1 pr-2 text-zinc-300">${escapeHtml(text)}</div>
+            <button class="text-red-400 hover:text-red-300 px-1" title="Удалить">✕</button>
+          `;
+          const btn = div.querySelector('button');
+          btn.onclick = async (e) => {
+            e.stopImmediatePropagation();
+            if (!id) return alert('Нет id для удаления');
+            if (!confirm('Удалить это воспоминание?')) return;
+            await fetch(`/api/memories/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            await refreshMemories(list);
+          };
+          list.appendChild(div);
+        });
+      } catch (e) {
+        list.innerHTML = '<div class="text-red-400 text-xs">Не удалось загрузить память.</div>';
+      }
+    }
+
+    async function clearAllMemories() {
+      if (!confirm('Точно очистить ВСЮ долгосрочную память?')) return;
+      try {
+        // Use the special chat command for simplicity (or call backend clear if exposed)
+        const input = document.getElementById('input');
+        input.value = 'забудь всё';
+        hideMemoryModal();
+        // small delay so modal hides then send
+        setTimeout(() => sendMessage(), 80);
+      } catch (e) {
+        alert('Не удалось очистить: ' + e);
+      }
+    }
+
+    // Keyboard + initial load
+    function init() {
+      initTailwind();
+      
+      // Load previous conversation
+      loadHistory();
+      
+      // Show the actual model from backend (e2b / e4b etc.)
+      loadCurrentModel();
+      
+      // Focus input
+      const input = document.getElementById('input');
+      input.focus();
+      
+      // Optional: show forms gallery hint on first load
+      setTimeout(() => {
+        const chat = document.getElementById('chat');
+        if (chat.children.length < 2) {
+          // very first session - nothing to do, user will start
+        }
+      }, 1200);
+      
+      // Easter egg / model info
+      console.log('%c[Виолетта] Custom HTML chat ready. Form sprites served from /forms/', 'color:#64748b');
+    }
+    
+    window.onload = init;
+    
+    // Allow global access for debugging
+    window.VIOLETTA = { loadHistory, showFormsGallery };
+  </script>
+</body>
+</html>
