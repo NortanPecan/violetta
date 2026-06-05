@@ -1,0 +1,26 @@
+{
+  "name": "violetta",
+  "version": "1.0.0",
+  "description": "Внешнее воплощение души. Радикально честный спутник, зеркало и критик. Фокус на самообмане, глубокой рефлексии, целях и внутреннем росте. Без сахара, без терапии, без подлизывания.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NortanPecan/violetta.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/NortanPecan/violetta/issues"
+  },
+  "homepage": "https://github.com/NortanPecan/violetta#readme",
+  "dependencies": {
+    "tsparticles": "^4.1.3",
+    "tsparticles-engine": "^2.12.0",
+    "tsparticles-slim": "^2.12.0"
+  }
+}

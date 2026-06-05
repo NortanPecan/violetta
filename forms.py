@@ -333,6 +333,43 @@ def get_all_form_sprites() -> list:
     return items
 
 
+def parse_ambient_commands(text: str) -> list[dict]:
+    """
+    Extract hidden [AMBIENT: ...] meta-commands for parallel control of visual presence.
+    Supports:
+      [AMBIENT: set_form red_fox]
+      [AMBIENT: set_opacity 0.35]
+      [AMBIENT: set_position left-mid]
+      [AMBIENT: burst_particles]
+      [AMBIENT: random_change]
+      [AMBIENT: set_intensity 0.9]
+    Returns list of {"type": "set_form", "value": "red_fox"} etc.
+    Safe, multiple allowed, case-insensitive.
+    """
+    if not text:
+        return []
+    import re
+    cmds = []
+    for m in re.finditer(r'\[AMBIENT:\s*([^\]]+?)\s*\]', text, re.IGNORECASE):
+        inner = m.group(1).strip()
+        if not inner:
+            continue
+        # Normalize separators: "set_form=red_fox" or "set_opacity 0.4" etc.
+        parts = re.split(r'[\s=]+', inner)
+        cmd = parts[0].strip().lower().replace('-', '_')
+        args = [p.strip() for p in parts[1:] if p.strip()]
+        if not cmd:
+            continue
+        if len(args) == 0:
+            val = True
+        elif len(args) == 1:
+            val = args[0]
+        else:
+            val = args
+        cmds.append({"type": cmd, "value": val})
+    return cmds
+
+
 def get_form_for_context(current_text: str, memory_texts: Optional[list[str]] = None) -> tuple[str, str]:
     """
     High-level helper used by server: combines current user message with long-term memory
@@ -356,24 +393,29 @@ def get_form_for_context(current_text: str, memory_texts: Optional[list[str]] = 
     return get_form_by_qualities(qualities, memories=memory_texts)
 
 # --- parse moved here so server and other modules can reuse without depending on the old Chainlit app.py ---
-def parse_form_from_response(text: str) -> tuple[str, str]:
+def parse_form_from_response(text: str) -> tuple[str, str, list]:
     """Extract sprite key via [SPRITE: key] marker (preferred new way) or fallback to old first-sentence logic.
-    Returns (sprite_key_or_desc, clean_text_without_marker_or_old_form_sentence).
+    Also extracts parallel [AMBIENT: ...] hidden meta-commands for the visual body.
+    Returns (sprite_key_or_desc, clean_text, ambient_commands_list).
+    Ambient commands are stripped from visible text.
     """
     text = text.strip()
     if not text:
-        return "pine_marten", text
+        return "pine_marten", text, []
+
+    import re
+    ambient_cmds = parse_ambient_commands(text)
 
     # New preferred way: [SPRITE: key] at the end
-    import re
     marker = re.search(r'\[SPRITE:\s*([a-zA-Z_]+)\s*\]\s*$', text, re.IGNORECASE)
     if marker:
         sprite_key = marker.group(1).lower().strip()
         clean = re.sub(r'\s*\[SPRITE:[^\]]+\]\s*$', '', text, flags=re.IGNORECASE).strip()
+        clean = re.sub(r'\[AMBIENT:[^\]]+\]', '', clean, flags=re.IGNORECASE).strip()
         # If after removing marker the text is empty, keep original without marker
         if not clean:
             clean = text
-        return sprite_key, clean
+        return sprite_key, clean, ambient_cmds
 
     # Fallback for old conversations or if model forgets marker: old first-line logic
     lines = text.split("\n", 1)
@@ -398,16 +440,17 @@ def parse_form_from_response(text: str) -> tuple[str, str]:
         rest = lines[1].strip() if len(lines) > 1 else ""
         if not rest or len(rest) < 15:
             rest = text
-        return form_desc, rest
+        rest = re.sub(r'\[AMBIENT:[^\]]+\]', '', rest, flags=re.IGNORECASE).strip()
+        return form_desc, rest, ambient_cmds
 
     # Fallback scan for known forms
     beginning = text[:250].lower()
     for form in POSSIBLE_FORMS:
         if form.lower() in beginning:
-            return form, text
+            return form, text, ambient_cmds
 
     for key in FORM_SPRITES:
         if key in beginning or key.replace("_", " ") in beginning:
-            return key, text
+            return key, text, ambient_cmds
 
-    return "pine_marten", text  # safe default so sprite always shows something
+    return "pine_marten", text, ambient_cmds  # safe default so sprite always shows something

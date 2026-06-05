@@ -204,7 +204,7 @@ async def main(message: cl.Message):
         return
 
     # 5. Parse the mandatory form description
-    form_desc, main_text = parse_form_from_response(full_response)
+    res = parse_form_from_response(full_response); form_desc, main_text = res[0], (res[1] if len(res) > 1 else full_response)
 
     if form_desc and form_desc != get_current_form():
         set_current_form(form_desc)

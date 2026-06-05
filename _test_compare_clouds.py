@@ -55,7 +55,7 @@ def strip_visible_leaks(text: str) -> str:
     return "\n".join(lines).strip() or "..."
 
 def get_form(raw: str) -> str:
-    k, _ = parse_form_from_response(raw)
+    res = parse_form_from_response(raw); k = res[0] if res else "pine_marten"
     return k or "pine_marten"
 
 def chat_with_model(client: OpenAI, model: str, messages: list) -> str:

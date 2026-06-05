@@ -58,7 +58,7 @@ def strip_visible_leaks(text: str) -> str:
 
 def get_sprite_for_response(raw_text: str) -> str:
     """Return the sprite key used (from marker or parse)."""
-    form_key, _ = parse_form_from_response(raw_text)
+    res = parse_form_from_response(raw_text); form_key = res[0] if res else "pine_marten"
     if form_key:
         return form_key
     # last resort keyword on whole (should not happen if marker works)

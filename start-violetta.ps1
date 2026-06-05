@@ -8,6 +8,7 @@ Set-Location $projectDir
 
 Write-Host "=== Виолетта — твой AI-даэмон (custom HTML) ===" -ForegroundColor Cyan
 Write-Host "Project: $projectDir" -ForegroundColor Gray
+Write-Host "Ambient: tsParticles golden dust + translucent form presence (corner overlay, form changes animate)" -ForegroundColor DarkGray
 Write-Host "Using pure custom frontend (no Chainlit) for perfect left-avatar + caption layout" -ForegroundColor DarkGray
 
 # Check Ollama

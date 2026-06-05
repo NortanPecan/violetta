@@ -21,3 +21,7 @@ Thumbs.db
 # Chainlit legacy
 .chainlit/
 chainlit.md
+
+# Node / tsParticles (frontend dep only, served via CDN for Railway; source of truth in package.json)
+node_modules/
+package-lock.json

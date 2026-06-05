@@ -52,7 +52,7 @@ from llm import (
     set_current_model,
     can_switch_to,
 )
-from memory import init_db, get_main_conversation_id, add_message, get_recent_messages, set_current_form
+from memory import init_db, get_main_conversation_id, add_message, get_recent_messages, set_current_form, get_current_form
 from long_term_memory import (
     search_memories,
     extract_and_save_memories,
@@ -133,6 +133,26 @@ async def get_history():
 async def get_forms():
     """List all possible forms with their sprite URLs (for the gallery / inspiration buttons)."""
     return get_all_form_sprites()
+
+
+@app.get("/api/current-form")
+async def get_current_form_api():
+    """Return the persisted current form (for ambient visual presence layer)."""
+    try:
+        form_desc = get_current_form()
+        if not form_desc:
+            # fallback to initial (already imported at top)
+            form_desc = get_initial_form_description()
+        sprite_url = get_sprite_url_for_form(form_desc or "")
+        return {
+            "form": form_desc or "",
+            "sprite_url": sprite_url,
+            "key": (form_desc or "").lower().replace(" ", "_")
+        }
+    except Exception as e:
+        # graceful fallback
+        sprite_url = get_sprite_url_for_form("")
+        return {"form": "", "sprite_url": sprite_url, "key": "pine_marten", "error": str(e)}
 
 
 @app.get("/api/model")
@@ -238,8 +258,12 @@ async def chat_endpoint(payload: ChatIn):
     relevant_memories: list = []
     violetta_memories: list = []
     try:
-        relevant_memories = await search_memories(user_text, limit=4)
-        violetta_memories = await search_violetta_memories(user_text, limit=3)
+        relevant_memories = await search_memories(user_text, limit=2)
+        violetta_memories = []
+        low = user_text.lower()
+        # Only search Violetta personal memory when user is asking about *her* feelings/reactions (saves tokens and time on normal turns)
+        if any(w in low for w in ["ты", "виолетта", "чувствуешь", "твои", "твоя", "твоё", "твоего", "как ты", "что ты"]):
+            violetta_memories = await search_violetta_memories(user_text, limit=2)
         parts = []
         if relevant_memories:
             parts.append(format_memories_for_prompt(relevant_memories))
@@ -342,10 +366,13 @@ async def chat_endpoint(payload: ChatIn):
                 await asyncio.sleep(0)  # be nice to event loop
 
             # Generation done — parse sprite via marker (new) or fallback. Then aggressively clean visible text.
-            form_desc, clean_text = parse_form_from_response(full_response)
+            form_desc, clean_text, ambient_cmds = parse_form_from_response(full_response)
+            if ambient_cmds is None:
+                ambient_cmds = []
 
             # Extra safety: strip marker + any leaked form names / animal words / "в форме" from the visible text the user sees
             clean_text = re.sub(r'\[SPRITE:[^\]]+\]', '', clean_text, flags=re.IGNORECASE).strip()
+            clean_text = re.sub(r'\[AMBIENT:[^\]]+\]', '', clean_text, flags=re.IGNORECASE).strip()
             # Remove leading lines that are clearly form declarations or animal references
             lines = [l for l in clean_text.splitlines() if l.strip()]
             while lines and any(kw in lines[0].lower() for kw in ["snow", "fox", "owl", "bear", "wolf", "pine", "serpent", "мартен", "барс", "лис", "сова", "в форме", "сейчас я в форме", "я в форме"]):
@@ -403,6 +430,34 @@ async def chat_endpoint(payload: ChatIn):
                 # if parse gave weak form_desc, keep a good one (LLM should have produced it thanks to hint)
                 if not form_desc or "не распознана" in form_desc or len(form_desc) < 10:
                     form_desc = f"Сейчас я в форме, которую ты попросил — чувствую контекст и твою просьбу."
+
+            # === Parallel ambient / visual body control channel ===
+            # LLM can emit hidden [AMBIENT: ...] markers (stripped from text).
+            # We yield them as separate 'ambient' SSE events (parallel to token/final).
+            # This lets Violetta control her presence (form, opacity, position, dust, burst)
+            # independently of the words she "speaks" to the user.
+            # Also support set_form via ambient as override (for full autonomy over her visual self).
+            effective_form = form_desc or ""
+            for ac in (ambient_cmds or []):
+                ac_type = (ac.get("type") or "").lower().replace("-", "_")
+                ac_val = ac.get("value")
+                if ac_type in ("set_form", "form") and ac_val:
+                    effective_form = str(ac_val).lower().strip().replace(" ", "_")
+                    try:
+                        set_current_form(effective_form)
+                    except Exception:
+                        pass
+                    form_desc = effective_form
+            if effective_form and effective_form != (form_desc or ""):
+                sprite_url = get_sprite_url_for_form(effective_form)
+
+            # Send each ambient command as its own event on the parallel meta channel.
+            # Client applies them live via the state manager (no visible text).
+            for ac in (ambient_cmds or []):
+                try:
+                    yield f"event: ambient\ndata: {json.dumps(ac)}\n\n"
+                except Exception:
+                    pass
 
             final_payload = {
                 "form": form_desc or "",

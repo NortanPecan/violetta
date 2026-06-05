@@ -71,71 +71,304 @@
     .daemon-header {
       background: linear-gradient(to right, #1f2937, #111827);
     }
+
+    /* === New Mystical Floating Chat === */
+    #chat-window {
+      position: fixed;
+      top: 9vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(94%, 680px);
+      max-height: 78vh;
+      background: rgba(12, 12, 18, 0.72);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      border-radius: 22px;
+      box-shadow: 
+        0 25px 70px -20px rgba(0, 0, 0, 0.85),
+        0 0 0 1px rgba(212, 175, 55, 0.08) inset,
+        0 0 40px -10px rgba(180, 150, 80, 0.12);
+      backdrop-filter: blur(14px) saturate(1.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 35;
+      font-size: 0.94em;
+    }
+
+    #chat-header {
+      cursor: move;
+      user-select: none;
+      padding: 10px 16px;
+      background: linear-gradient(to right, rgba(30,25,15,0.55), rgba(15,12,8,0.35));
+      border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82em;
+    }
+
+    #chat-header .font-display {
+      color: #e8d5a3;
+      letter-spacing: -0.02em;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px;
+      background: rgba(8, 8, 12, 0.25);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(212, 175, 55, 0.18) transparent;
+    }
+
+    #chat::-webkit-scrollbar {
+      width: 3px;
+      background: transparent;
+    }
+    #chat::-webkit-scrollbar-thumb {
+      background: rgba(212, 175, 55, 0.22);
+      border-radius: 2px;
+    }
+    #chat:hover::-webkit-scrollbar-thumb {
+      background: rgba(212, 175, 55, 0.38);
+    }
+
+    .message-bubble {
+      max-width: 78%;
+      padding: 11px 15px;
+      border-radius: 16px;
+      position: relative;
+      line-height: 1.35;
+    }
+
+    .user-bubble {
+      background: rgba(63, 66, 95, 0.55);
+      color: #e0e7ff;
+      border-bottom-right-radius: 5px;
+      border: 1px solid rgba(99, 102, 241, 0.15);
+    }
+
+    .assistant-bubble {
+      background: rgba(18, 18, 24, 0.38);
+      color: #f1e9d2;
+      border: 1px solid rgba(212, 175, 55, 0.16);
+      border-bottom-left-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      animation: violetta-message-float 4.8s ease-in-out infinite;
+    }
+
+    @keyframes violetta-message-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1.6px); }
+    }
+
+    .pixel-sprite {
+      image-rendering: pixelated;
+      border: 1px solid rgba(120, 100, 60, 0.35);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    }
+
+    #chat-input-area {
+      padding: 8px 12px 10px;
+      background: rgba(6,6,10,0.45);
+      border-top: 1px solid rgba(212, 175, 55, 0.12);
+    }
+
+    #input {
+      background: rgba(255,255,255,0.015);
+      border: 1px solid rgba(180, 160, 90, 0.25);
+      color: #e8d5a3;
+      font-size: 0.92em;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #input:focus {
+      border-color: rgba(212, 175, 55, 0.55);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+      outline: none;
+    }
+    #input::placeholder {
+      color: rgba(180, 160, 90, 0.35);
+    }
+
+    /* Collapsed bubble / portal */
+    #chat-bubble {
+      position: fixed;
+      width: 54px;
+      height: 54px;
+      border-radius: 9999px;
+      overflow: hidden;
+      border: 1px solid rgba(212, 175, 55, 0.38);
+      box-shadow: 0 8px 25px -8px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.1) inset;
+      z-index: 55;
+      background: rgba(10,8,5,0.55);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s;
+    }
+    #chat-bubble:hover {
+      transform: scale(1.06);
+      box-shadow: 0 10px 30px -6px rgba(0,0,0,0.7), 0 0 12px -2px rgba(212,175,55,0.25);
+    }
+    #bubble-sprite {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      opacity: 0.92;
+    }
+
+    /* Subtle dust aura on V messages via particles + this class */
+    .assistant-bubble::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      background: radial-gradient(circle at 30% 20%, rgba(212,175,55,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Ambient visual presence layer (tsParticles + current form sprite) */
+    #ambient-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    #tsparticles {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    #ambient-sprite {
+      position: fixed;
+      right: 4vw;
+      bottom: 6vh;
+      width: 168px;
+      height: 168px;
+      object-fit: cover;
+      border-radius: 9999px; /* soft round presence, almost silhouette */
+      opacity: 0.22;
+      z-index: 2;
+      pointer-events: none;
+      image-rendering: pixelated;
+      /* ethereal gold-silver presence feel */
+      filter: contrast(0.95) saturate(1.1) brightness(0.95);
+      box-shadow: 
+        0 0 0 1px rgba(212, 175, 55, 0.15),
+        0 10px 30px -10px rgba(0,0,0,0.6),
+        0 0 40px -8px rgba(212, 175, 55, 0.12);
+      transition: opacity 520ms cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 520ms cubic-bezier(0.4, 0, 0.2, 1),
+                  left 650ms ease, right 650ms ease, top 650ms ease, bottom 650ms ease,
+                  filter 400ms ease;
+      will-change: transform, opacity, left, right, top, bottom;
+    }
+
+    /* subtle vignette to help dust feel in the "air" */
+    .ambient-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background: radial-gradient(
+        circle at 70% 60%,
+        transparent 55%,
+        rgba(0,0,0,0.35) 82%
+      );
+      mix-blend-mode: multiply;
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200">
-  <div class="max-w-4xl mx-auto h-screen flex flex-col">
-    <!-- Header -->
-    <div class="daemon-header px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-      <div class="flex items-center gap-x-3">
-        <div class="w-9 h-9 bg-indigo-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl">V</div>
+  <!-- Ambient layer: dust particles + semi-transparent Violetta form presence. Non-interactive overlay. -->
+  <div id="ambient-layer">
+    <div id="tsparticles"></div>
+    <!-- current form sprite (translucent daemon presence in corner) -->
+    <img id="ambient-sprite" alt="Violetta presence" />
+    <div class="ambient-vignette"></div>
+  </div>
+
+  <!-- Floating, semi-transparent mystical chat window (draggable, collapsible, secondary element) -->
+  <div id="chat-window">
+    <!-- Drag handle / header -->
+    <div id="chat-header" class="px-4 py-2.5 flex items-center justify-between border-b border-amber-900/30 bg-gradient-to-r from-black/40 to-transparent">
+      <div class="flex items-center gap-x-2.5">
+        <div class="w-7 h-7 bg-gradient-to-br from-amber-300/90 via-yellow-600/70 to-amber-800/80 rounded-xl flex items-center justify-center text-[13px] font-bold text-black/90 shadow ring-1 ring-amber-200/50">V</div>
         <div>
-          <div class="font-display text-2xl tracking-tighter font-semibold">Виолетта</div>
-          <div class="text-[10px] text-zinc-500 -mt-1">твой честный AI-даэмон</div>
+          <div class="font-display text-lg tracking-tighter font-semibold text-[#e8d5a3]">Виолетта</div>
+          <div class="text-[8.5px] text-amber-300/50 -mt-0.5 tracking-[0.5px]">даэмон • пыль и тени</div>
         </div>
       </div>
-      
-      <div class="flex items-center gap-x-2 text-xs">
+
+      <div class="flex items-center gap-x-0.5 text-[10px]">
+        <!-- model -->
         <button id="model-switcher"
                 onclick="showModelSwitcher()"
-                class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-950 transition-colors rounded-full flex items-center gap-x-1.5 border border-zinc-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                title="Переключить модель (только в пределах cloud или local)">
-          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-          <span id="model-status" class="text-zinc-400 font-mono text-[11px]">gemma4:31b-cloud (cloud)</span>
+                class="px-2 py-0.5 bg-black/40 hover:bg-black/60 active:bg-black/70 transition-colors rounded-full flex items-center gap-x-1 border border-amber-900/30 cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400/30"
+                title="Переключить модель">
+          <div class="w-1.5 h-1.5 bg-emerald-400/80 rounded-full animate-pulse"></div>
+          <span id="model-status" class="text-amber-200/70 font-mono text-[9px] pr-0.5">gemma4:31b-cloud</span>
         </button>
-        
+
         <button onclick="showFormsGallery()" 
-                class="px-3 py-1.5 text-xs bg-zinc-900 hover:bg-zinc-800 transition-colors rounded-xl border border-zinc-800 flex items-center gap-x-1.5">
+                class="p-1 text-amber-300/70 hover:text-amber-200 transition-colors rounded-md hover:bg-white/5" title="Формы">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
           </svg>
-          <span>Формы</span>
         </button>
 
         <button onclick="showMemoryModal()" 
-                class="px-3 py-1.5 text-xs bg-zinc-900 hover:bg-zinc-800 transition-colors rounded-xl border border-zinc-800 flex items-center gap-x-1.5">
+                class="p-1 text-amber-300/70 hover:text-amber-200 transition-colors rounded-md hover:bg-white/5" title="Память">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2" />
           </svg>
-          <span>Память</span>
         </button>
+
+        <button onclick="toggleAmbientConfig()" 
+                class="p-1 text-amber-300/70 hover:text-amber-200 transition-colors rounded-md hover:bg-white/5" title="Dust &amp; присутствие">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-6.857 2.143L12 21l-2.143-6.857L3 12l6.857-2.143L12 3z" />
+          </svg>
+        </button>
+
+        <!-- collapse to bubble -->
+        <button onclick="toggleChatCollapse()" title="Свернуть в пузырь" 
+                class="px-1.5 py-0.5 text-amber-400/60 hover:text-amber-300 text-base leading-none">−</button>
       </div>
     </div>
 
-    <!-- Chat -->
+    <!-- Messages area -->
     <div id="chat" 
-         class="flex-1 overflow-y-auto p-6 space-y-6 chat-scroll bg-zinc-900/30">
+         class="flex-1 overflow-y-auto p-4 space-y-5 chat-scroll">
       <!-- Messages injected by JS -->
     </div>
 
-    <!-- Input -->
-    <div class="p-4 border-t border-zinc-800 bg-zinc-950">
-      <div class="flex gap-2 items-end max-w-3xl mx-auto">
+    <!-- Minimal input -->
+    <div id="chat-input-area" class="p-2.5 border-t border-amber-900/20">
+      <div class="flex gap-1.5 items-end">
         <div class="flex-1 relative">
           <textarea id="input" rows="1"
-                    class="w-full bg-zinc-900 border border-zinc-800 focus:border-indigo-500/70 transition-colors rounded-3xl px-5 py-3.5 text-sm placeholder-zinc-500 resize-none outline-none"
-                    placeholder="Расскажи, что на душе... (или «стань выдрой»)"
+                    class="w-full bg-transparent border border-amber-800/30 focus:border-amber-400/50 transition-colors rounded-2xl px-4 py-2.5 text-[13px] placeholder-amber-200/30 resize-none outline-none"
+                    placeholder="... (или «стань лисой»)"
                     onkeydown="if (event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
         </div>
         <button onclick="sendMessage()"
-                class="h-11 w-11 flex-shrink-0 bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 transition-all rounded-2xl flex items-center justify-center shadow-inner">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                class="h-9 w-9 flex-shrink-0 bg-amber-900/60 hover:bg-amber-800/70 active:bg-amber-900/80 transition-all rounded-2xl flex items-center justify-center border border-amber-700/40">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
           </svg>
         </button>
       </div>
-      <div class="text-[10px] text-zinc-600 mt-2 text-center">Виолетта помнит контекст. Радикальная честность — по умолчанию.</div>
+      <div class="text-[8px] text-amber-200/25 mt-1 text-center tracking-widest">сущность • пыль помнит</div>
     </div>
+  </div>
+
+  <!-- Collapsed "пузырь" / portal to chat (draggable, near the presence) -->
+  <div id="chat-bubble" onclick="toggleChatCollapse()" class="hidden" style="bottom: 4.5vh; right: 3.5vw;">
+    <img id="bubble-sprite" alt="V" />
   </div>
 
   <!-- Forms Gallery Modal -->
@@ -172,7 +405,50 @@
     </div>
   </div>
 
+  <!-- Ambient config (minimal, non-intrusive) -->
+  <div id="ambient-config" onclick="if (event.target.id === 'ambient-config') hideAmbientConfig()" class="hidden fixed inset-0 bg-black/40 z-[90] flex items-end sm:items-center justify-center">
+    <div onclick="event.stopImmediatePropagation()" 
+         class="bg-zinc-900 border border-zinc-700 w-full sm:w-80 sm:rounded-3xl sm:m-4 p-4 rounded-t-3xl text-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-medium text-xs tracking-widest text-amber-300/80">ФОНОВОЕ ПРИСУТСТВИЕ</div>
+        <button onclick="hideAmbientConfig()" class="text-zinc-400 hover:text-white text-xs">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <div class="flex justify-between mb-1 text-zinc-400">
+            <span>Интенсивность частиц</span>
+            <span id="val-intensity">0.65</span>
+          </div>
+          <input type="range" id="cfg-intensity" min="0.1" max="1.6" step="0.05" class="w-full accent-amber-400">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1 text-zinc-400">
+            <span>Прозрачность формы</span>
+            <span id="val-opacity">0.22</span>
+          </div>
+          <input type="range" id="cfg-opacity" min="0.05" max="0.55" step="0.01" class="w-full accent-amber-400">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1 text-zinc-400">
+            <span>Размер спрайта</span>
+            <span id="val-scale">1.0</span>
+          </div>
+          <input type="range" id="cfg-scale" min="0.6" max="1.9" step="0.05" class="w-full accent-amber-400">
+        </div>
+      </div>
+
+      <div class="mt-3 pt-2 border-t border-zinc-800 flex gap-2 text-[10px]">
+        <button onclick="resetAmbientConfig()" class="flex-1 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700">Сброс</button>
+        <button onclick="applyAmbientConfig(); hideAmbientConfig()" class="flex-1 px-3 py-1 bg-amber-900/60 hover:bg-amber-900/80 rounded-lg border border-amber-800/60 text-amber-200">Применить</button>
+      </div>
+      <div class="text-[9px] text-zinc-500 mt-2">Золотисто-серебристая пыль в стиле Тёмных Начал. Форма следует за текущим состоянием.</div>
+    </div>
+  </div>
+
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- tsParticles (slim bundle via CDN for zero-build MVP; npm packages installed in package.json for reference) -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@3/tsparticles.bundle.min.js"></script>
   <script>
     // Tailwind script config
     function initTailwind() {
@@ -204,6 +480,38 @@
         
         // Scroll to bottom
         chat.scrollTop = chat.scrollHeight;
+
+        // Sync ambient presence to the *last* form in history (current state)
+        const lastAssistant = [...history].reverse().find(m => m.role === 'assistant' && m.sprite_url);
+        if (lastAssistant && lastAssistant.sprite_url) {
+          setTimeout(() => {
+            const mgr = window.violettaAmbient || getAmbientMgr();
+            if (mgr && mgr.setForm) {
+              // best effort: try to find key from url (reverse)
+              let key = null;
+              if (mgr.formMap) {
+                const e = Object.entries(mgr.formMap).find(([,u]) => u === lastAssistant.sprite_url);
+                if (e) key = e[0];
+              }
+              if (key) mgr.setForm(key);
+              else setAmbientFromChatSprite(lastAssistant.sprite_url, false);
+            } else {
+              setAmbientFromChatSprite(lastAssistant.sprite_url, false);
+            }
+            // keep bubble sprite in sync
+            const bub = document.getElementById('bubble-sprite');
+            if (bub) bub.src = lastAssistant.sprite_url;
+
+            // light dust emanation only for the current (last) message
+            setTimeout(() => {
+              const mgr = window.violettaAmbient || getAmbientMgr();
+              const bubble = document.querySelector('#chat .assistant-bubble:last-child');
+              if (mgr && bubble && typeof mgr.spawnDustNear === 'function') {
+                mgr.spawnDustNear(bubble, 4);
+              }
+            }, 160);
+          }, 220);
+        }
       } catch (e) {
         console.error('Failed to load history', e);
       }
@@ -435,6 +743,12 @@
       // Append user immediately
       appendUserMessage(text);
       
+      // Let the ambient presence react — she notices you're engaging
+      const mgr = window.violettaAmbient || getAmbientMgr();
+      if (mgr && typeof mgr.reactToUserActivity === 'function') {
+        mgr.reactToUserActivity('message');
+      }
+      
       // Create assistant placeholder bubble (will be upgraded on final)
       const assistantContainer = document.createElement('div');
       assistantContainer.className = 'flex gap-3';
@@ -499,6 +813,12 @@
                 textDiv.innerHTML = escapeHtml(liveText);
                 chat.scrollTop = chat.scrollHeight;
               } 
+              else if (eventType === 'ambient') {
+                // Parallel hidden channel from Violetta — she controls her visual body
+                const mgr = window.violettaAmbient || getAmbientMgr();
+                if (mgr && mgr.applyCommand) mgr.applyCommand(data);
+                else if (window.VIOLETTA_AMBIENT && window.VIOLETTA_AMBIENT.applyCommand) window.VIOLETTA_AMBIENT.applyCommand(data);
+              }
               else if (eventType === 'final') {
                 formData = data;
                 // Transform the bubble into the proper avatar layout
@@ -560,6 +880,28 @@
       `;
       
       chat.scrollTop = chat.scrollHeight;
+
+      // Update ambient layer presence (with nice transition + burst)
+      // Prefer manager (uses state + full transition). Fallback to wrapper.
+      if (finalData.sprite_url) {
+        setTimeout(() => {
+          const mgr = window.violettaAmbient || getAmbientMgr();
+          if (mgr && finalData.form) {
+            const fk = String(finalData.form).toLowerCase().replace(/[^a-z0-9_]/g, '_');
+            if (mgr.formMap && mgr.formMap[fk]) { mgr.setForm(fk); return; }
+          }
+          setAmbientFromChatSprite(finalData.sprite_url, true);
+        }, 80);
+      }
+
+      // Dust particles emanating from her message
+      setTimeout(() => {
+        const mgr = window.violettaAmbient || getAmbientMgr();
+        const bubble = container.querySelector('.assistant-bubble');
+        if (mgr && bubble && typeof mgr.spawnDustNear === 'function') {
+          mgr.spawnDustNear(bubble, 6);
+        }
+      }, 110);
     }
 
     async function showFormsGallery() {
@@ -669,6 +1011,861 @@
       }
     }
 
+    // ========== AMBIENT VISUAL PRESENCE (tsParticles Dust + current form) ==========
+    // Now with full State Manager + parallel meta channel (SSE 'ambient' events) + autonomy loop.
+    // Violetta can control her own "body" via hidden [AMBIENT: ...] from LLM *and* her own random whims.
+    // Gold-silver Dust, smooth ethereal transitions. Minimal, atmospheric, non-blocking.
+
+    // Centralized state manager — single source of truth for her visual presence.
+    // All changes (LLM cmds, UI config, autonomy random, chat sync) go through here.
+    class ViolettaAmbient {
+      constructor() {
+        this.state = {
+          form: 'pine_marten',
+          spriteUrl: '',
+          opacity: 0.22,
+          position: 'bottom-right',
+          intensity: 0.65,
+          scale: 1.0
+        };
+        this.particles = null;
+        this.spriteEl = null;
+        this.formMap = {}; // key -> /forms/xxx.jpg url
+        this.POSITIONS = {
+          'bottom-right': { right: '4vw', bottom: '6vh', left: 'auto', top: 'auto' },
+          'bottom-left':  { left: '4vw', bottom: '6vh', right: 'auto', top: 'auto' },
+          'top-right':    { right: '4vw', top: '8vh', left: 'auto', bottom: 'auto' },
+          'top-left':     { left: '4vw', top: '8vh', right: 'auto', bottom: 'auto' },
+          'right-mid':    { right: '3.5vw', top: '42%', left: 'auto', bottom: 'auto' },
+          'left-mid':     { left: '3.5vw', top: '42%', right: 'auto', bottom: 'auto' }
+        };
+        this.driftX = 0;
+        this.driftY = 0;
+        this.driftVelX = (Math.random() - 0.5) * 0.015;
+        this.driftVelY = (Math.random() - 0.5) * 0.012;
+        this.breathingPhase = 0;
+        this.lastUserActivity = Date.now();
+        this.sessionStart = Date.now();
+        this.lifeRaf = null;
+      }
+
+      async init() {
+        this.loadFromStorage();
+        this.spriteEl = document.getElementById('ambient-sprite');
+
+        // Load available forms for random/autonomy + command resolution
+        try {
+          const res = await fetch('/api/forms');
+          const forms = await res.json();
+          this.formMap = {};
+          (forms || []).forEach(f => { if (f.key && f.url) this.formMap[f.key] = f.url; });
+          window.VIOLETTA_FORMS = Object.keys(this.formMap);
+        } catch (e) { console.warn('[ambient] forms list failed', e); }
+
+        // Initial from server (persisted current_form from last real response)
+        try {
+          const r = await fetch('/api/current-form');
+          const d = await r.json();
+          if (d.sprite_url) {
+            this.state.spriteUrl = d.sprite_url;
+            // try to reverse map to key for state
+            const entry = Object.entries(this.formMap).find(([,u]) => u === d.sprite_url);
+            if (entry) this.state.form = entry[0];
+            if (this.spriteEl) {
+              this.spriteEl.src = d.sprite_url;
+              this.applySpriteStyles(); // opacity/pos/scale from state
+              // initial kick so it doesn't start completely static
+              this.driftVelX += 0.022;
+              this.driftVelY += (Math.random() - 0.5) * 0.015;
+
+              const bub = document.getElementById('bubble-sprite');
+              if (bub) bub.src = d.sprite_url;
+            }
+          }
+        } catch (e) { /* non fatal */ }
+
+        await this.initParticles();
+
+        // Start continuous living animations (breathing + natural drift)
+        this.startLifeLoop();
+
+        // React to user presence in the tab (makes her "notice" when you engage)
+        const ta = document.getElementById('input');
+        if (ta) {
+          ta.addEventListener('focus', () => this.reactToUserActivity('focus'));
+          ta.addEventListener('input', () => {
+            if (Math.random() < 0.12) this.reactToUserActivity('typing');
+          });
+        }
+
+        // Legacy global for console / old code
+        window.violettaAmbient = this;
+        window.VIOLETTA_AMBIENT = {
+          setForm: (k) => this.setForm(k),
+          setOpacity: (v) => this.setOpacity(v),
+          setPosition: (p) => this.setPosition(p),
+          setIntensity: (v) => this.setIntensity(v),
+          setScale: (v) => this.setScale(v),
+          burst: () => this.burst(),
+          randomShift: () => this.randomShift(),
+          getState: () => ({...this.state}),
+          applyCommand: (c) => this.applyCommand(c),
+          react: (t) => this.reactToUserActivity(t)
+        };
+        console.log('%c[ambient] ViolettaAmbient manager ready (living drift + breath + context)', 'color:#854d0e');
+      }
+
+      loadFromStorage() {
+        try {
+          const saved = localStorage.getItem('violetta_ambient_config');
+          if (saved) {
+            const p = JSON.parse(saved);
+            if (p.intensity != null) this.state.intensity = p.intensity;
+            if (p.opacity != null) this.state.opacity = p.opacity;
+            if (p.spriteScale != null) this.state.scale = p.spriteScale;
+            // position can be added later if we persist it
+          }
+        } catch (e) {}
+      }
+
+      saveToStorage() {
+        try {
+          localStorage.setItem('violetta_ambient_config', JSON.stringify({
+            intensity: this.state.intensity,
+            opacity: this.state.opacity,
+            spriteScale: this.state.scale,
+            position: this.state.position
+          }));
+        } catch (e) {}
+      }
+
+      applySpriteStyles() {
+        if (!this.spriteEl) return;
+        const s = this.state;
+        this.spriteEl.style.opacity = String(s.opacity);
+        // Anchor position only (life loop handles live transform = drift + breathing scale)
+        const pos = this.POSITIONS[s.position] || this.POSITIONS['bottom-right'];
+        Object.keys(pos).forEach(k => {
+          this.spriteEl.style[k] = pos[k];
+        });
+        // reset micro drift when anchor changes significantly (feels like she chose a new spot)
+        if (Math.abs(this.driftX) > 30 || Math.abs(this.driftY) > 25) {
+          this.driftX *= 0.3;
+          this.driftY *= 0.3;
+        }
+      }
+
+      async initParticles(intensityOverride = null) {
+        if (!window.tsParticles) return;
+        const layer = document.getElementById('tsparticles');
+        if (!layer) return;
+
+        if (this.particles) {
+          try { this.particles.destroy(); } catch (_) {}
+          this.particles = null;
+        }
+
+        const intensity = intensityOverride != null ? intensityOverride : (this.state.intensity || 0.65);
+        const base = 26;
+        const count = Math.max(5, Math.floor(base * intensity));
+
+        const opts = {
+          background: { color: { value: 'transparent' } },
+          fpsLimit: 58,
+          particles: {
+            number: { value: count, density: { enable: true, area: 820 } },
+            color: { value: ['#d4af37', '#e8d5a3', '#c8b8a0', '#a7b8c8', '#f0e4c8', '#d1d5db'] },
+            shape: { type: 'circle' },
+            opacity: { value: { min: 0.07, max: 0.34 }, animation: { enable: true, speed: 0.55, sync: false, minimumValue: 0.04 } },
+            size: { value: { min: 0.7, max: 2.8 } },
+            move: { enable: true, speed: 0.18, direction: 'none', random: true, straight: false, outModes: { default: 'out' } },
+            twinkle: { particles: { enable: true, frequency: 0.025, opacity: 0.55 } }
+          },
+          interactivity: { events: { onHover: { enable: false }, onClick: { enable: false } } },
+          detectRetina: true
+        };
+
+        try {
+          this.particles = await tsParticles.load({ id: 'tsparticles', options: opts });
+        } catch (e) {
+          console.warn('[ambient] particles load failed', e);
+        }
+      }
+
+      // === Public setters (all go through state + apply) ===
+      setForm(key) {
+        if (!key) return;
+        const url = this.formMap[key] || this.formMap[key.toLowerCase()];
+        if (!url) { console.warn('[ambient] unknown form key', key); return; }
+
+        const img = this.spriteEl;
+        if (!img) return;
+
+        const targetO = this.state.opacity;
+        const targetS = this.state.scale || 1;
+
+        // more expressive "shift" — bigger pop, double breath-like burst
+        img.style.transitionDuration = '220ms';
+        img.style.opacity = '0.01';
+        img.style.transform = `translate(${this.driftX}px, ${this.driftY}px) scale(${targetS * 0.62})`;
+
+        // first expressive burst on "leaving" old form
+        setTimeout(() => { try { this.burst(); } catch(_) {} }, 60);
+
+        setTimeout(() => {
+          img.src = url;
+          this.state.form = key;
+          this.state.spriteUrl = url;
+          img.style.transitionDuration = '580ms';
+          img.style.opacity = String(targetO * 0.7);
+          img.style.transform = `translate(${this.driftX * 0.6}px, ${this.driftY * 0.6}px) scale(${targetS * 1.18})`;
+
+          // sync collapsed bubble if present
+          const bub = document.getElementById('bubble-sprite');
+          if (bub) bub.src = url;
+
+          setTimeout(() => {
+            this.applySpriteStyles();
+            // second stronger burst as new form "settles in"
+            try { this.burst(); } catch(_) {}
+            setTimeout(() => { try { this.burst(); } catch(_) {} }, 260);
+            // give her a little "wake up" drift kick
+            this.driftVelX += (Math.random() - 0.5) * 0.09;
+            this.driftVelY += (Math.random() - 0.5) * 0.07;
+          }, 110);
+        }, 210);
+
+        this.saveToStorage();
+      }
+
+      setOpacity(v) {
+        const val = Math.max(0.04, Math.min(0.6, parseFloat(v) || 0.22));
+        this.state.opacity = val;
+        if (this.spriteEl) this.spriteEl.style.opacity = String(val);
+        this.saveToStorage();
+      }
+
+      setPosition(pos) {
+        if (!this.POSITIONS[pos]) pos = 'bottom-right';
+        this.state.position = pos;
+        if (this.spriteEl) {
+          // let css transition make the anchor move feel natural/slow
+          const prev = this.spriteEl.style.transitionDuration;
+          this.spriteEl.style.transitionDuration = '650ms';
+          this.applySpriteStyles();
+          setTimeout(() => {
+            if (this.spriteEl) this.spriteEl.style.transitionDuration = prev || '420ms';
+          }, 700);
+        } else {
+          this.applySpriteStyles();
+        }
+        this.saveToStorage();
+      }
+
+      setIntensity(v) {
+        const val = Math.max(0.1, Math.min(1.8, parseFloat(v) || 0.65));
+        this.state.intensity = val;
+        // reload particles (cheap)
+        this.initParticles(val);
+        this.saveToStorage();
+      }
+
+      setScale(v) {
+        const val = Math.max(0.5, Math.min(2.0, parseFloat(v) || 1.0));
+        this.state.scale = val;
+        if (this.spriteEl) this.spriteEl.style.transform = `scale(${val})`;
+        this.saveToStorage();
+      }
+
+      burst() {
+        const el = this.spriteEl;
+        if (!this.particles || !el) {
+          // fallback visual pop on sprite
+          if (el) {
+            const origT = el.style.transitionDuration;
+            const origTr = el.style.transform;
+            el.style.transitionDuration = '80ms';
+            el.style.transform = `scale(${(this.state.scale||1)*0.82})`;
+            setTimeout(() => {
+              if (el) {
+                el.style.transitionDuration = '420ms';
+                el.style.transform = origTr || `scale(${this.state.scale||1})`;
+              }
+            }, 80);
+          }
+          return;
+        }
+        try {
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width * 0.5;
+          const cy = rect.top + rect.height * 0.5;
+          for (let i=0; i<16; i++) {
+            const jx = (Math.random()-0.5)*30, jy=(Math.random()-0.5)*26;
+            const vx=(Math.random()-0.5)*2.0, vy=(Math.random()-0.5)*1.5 - 0.4;
+            this.particles.particles.addParticle({
+              x: cx+jx, y: cy+jy,
+              color: { value: (i%2===0)?'#d4af37':'#c5b8a8' },
+              size: { value: 1.5 + Math.random() },
+              opacity: { value: 0.5 + Math.random()*0.4 },
+              move: { velocity: { x: vx, y: vy } }
+            });
+          }
+        } catch (e) {
+          // count bump fallback
+          try {
+            const n = this.particles.options?.particles?.number;
+            if (n && n.value) {
+              const o = n.value;
+              n.value = Math.floor(o * 1.8);
+              setTimeout(() => { if (n) n.value = o; }, 700);
+            }
+          } catch(_) {}
+        }
+      }
+
+      // Light Dust that sometimes flies near Violetta's messages (makes it feel like words are made of her)
+      spawnDustNear(el, count = 6) {
+        if (!this.particles || !el) return;
+        try {
+          const rect = el.getBoundingClientRect();
+          for (let i = 0; i < count; i++) {
+            const px = rect.left + rect.width * (0.15 + Math.random() * 0.7);
+            const py = rect.top + rect.height * (0.15 + Math.random() * 0.6);
+            const vx = (Math.random() - 0.5) * 1.1;
+            const vy = -0.35 - Math.random() * 0.65; // rising dust
+            this.particles.particles.addParticle({
+              x: px, y: py,
+              color: { value: (i % 2 === 0) ? '#d4af37' : '#c8b8a0' },
+              size: { value: 1.1 + Math.random() * 1.3 },
+              opacity: { value: 0.4 + Math.random() * 0.35 },
+              move: { velocity: { x: vx, y: vy } }
+            });
+          }
+        } catch (e) { /* silent */ }
+      }
+
+      randomShift() {
+        // "мне самой захотелось" — now context-aware and more alive
+        const idleMs = Date.now() - this.lastUserActivity;
+        const sessionMs = Date.now() - this.sessionStart;
+        const isLongIdle = idleMs > 120000; // >2min silence
+        const isVeryLongSession = sessionMs > 600000; // >10min in tab
+
+        const r = Math.random();
+
+        // bias when long idle: more subtle movement / dust / breathing changes, rare big form shifts
+        if (isLongIdle && r < 0.55) {
+          // living but calm: drift more, adjust energy, occasional quiet relocate
+          this.driftVelX += (Math.random() - 0.5) * 0.08;
+          this.driftVelY += (Math.random() - 0.5) * 0.07;
+          if (r < 0.3) {
+            const ni = Math.max(0.15, Math.min(0.9, this.state.intensity + (Math.random()-0.5)*0.35));
+            this.setIntensity(ni);
+          } else if (r < 0.5) {
+            const newO = Math.max(0.1, Math.min(0.4, this.state.opacity + (Math.random()-0.5)*0.12));
+            this.setOpacity(newO);
+          } else {
+            // slow relocate to new perch
+            const posKeys = Object.keys(this.POSITIONS);
+            const np = posKeys[Math.floor(Math.random() * posKeys.length)];
+            this.setPosition(np);
+          }
+          if (Math.random() < 0.25) setTimeout(() => this.burst(), 220);
+          return;
+        }
+
+        if (r < 0.28 && Object.keys(this.formMap).length > 1) {
+          const keys = Object.keys(this.formMap).filter(k => k !== this.state.form);
+          if (keys.length) this.setForm(keys[Math.floor(Math.random()*keys.length)]);
+        } else if (r < 0.48) {
+          const newO = Math.max(0.08, Math.min(0.5, this.state.opacity + (Math.random()-0.5)*0.22));
+          this.setOpacity(newO);
+        } else if (r < 0.68) {
+          const posKeys = Object.keys(this.POSITIONS);
+          let np = posKeys[Math.floor(Math.random()*posKeys.length)];
+          if (np === this.state.position) np = posKeys[(posKeys.indexOf(np)+1) % posKeys.length];
+          this.setPosition(np);
+        } else if (r < 0.82) {
+          const ni = Math.max(0.2, Math.min(1.4, this.state.intensity + (Math.random()-0.5)*0.5));
+          this.setIntensity(ni);
+        } else {
+          const ns = Math.max(0.7, Math.min(1.7, this.state.scale + (Math.random()-0.5)*0.35));
+          this.setScale(ns);
+        }
+        // small chance extra burst on her whim
+        if (Math.random() < (isLongIdle ? 0.25 : 0.45)) setTimeout(() => this.burst(), 180);
+      }
+
+      // Continuous life: breathing + natural micro-drift. Makes the sprite feel alive even when "still".
+      startLifeLoop() {
+        if (this.lifeRaf) cancelAnimationFrame(this.lifeRaf);
+        const loop = (t) => {
+          if (!this.spriteEl) {
+            this.lifeRaf = requestAnimationFrame(loop);
+            return;
+          }
+          this.breathingPhase = (t || Date.now()) * 0.0012; // ~5-6s cycle
+
+          const breathScale = 1 + Math.sin(this.breathingPhase) * 0.035; // gentle +/- ~3.5% "breathing"
+          const breathO = 1 + Math.sin(this.breathingPhase * 0.65) * 0.08; // slower, more noticeable presence pulse
+
+          const baseS = this.state.scale || 1;
+          const baseO = this.state.opacity || 0.22;
+
+          // combine breathing + drift (drift is around current anchor position)
+          const tx = this.driftX;
+          const ty = this.driftY;
+          this.spriteEl.style.transform = `translate(${tx}px, ${ty}px) scale(${baseS * breathScale})`;
+
+          // breathing affects perceived presence
+          this.spriteEl.style.opacity = (baseO * breathO).toFixed(3);
+
+          // natural slow drift (random walk with inertia + occasional kick)
+          this.driftX += this.driftVelX;
+          this.driftY += this.driftVelY;
+          this.driftVelX *= 0.992;
+          this.driftVelY *= 0.992;
+
+          // gentle random "thoughts" / micro adjustments
+          if (Math.random() < 0.018) {
+            this.driftVelX += (Math.random() - 0.5) * 0.035;
+            this.driftVelY += (Math.random() - 0.5) * 0.028;
+          }
+
+          // soft bounds so she doesn't wander off too far from anchor — enough to feel alive
+          const maxDrift = 85;
+          if (Math.abs(this.driftX) > maxDrift) {
+            this.driftVelX *= -0.65;
+            this.driftX = Math.sign(this.driftX) * maxDrift;
+          }
+          if (Math.abs(this.driftY) > maxDrift * 0.78) {
+            this.driftVelY *= -0.65;
+            this.driftY = Math.sign(this.driftY) * maxDrift * 0.78;
+          }
+
+          // occasional stronger "sigh" or stretch when very idle
+          const idle = Date.now() - this.lastUserActivity;
+          if (idle > 180000 && Math.random() < 0.004) {
+            this.driftVelX += (Math.random() - 0.5) * 0.12;
+            this.driftVelY += (Math.random() - 0.5) * 0.09;
+          }
+
+          this.lifeRaf = requestAnimationFrame(loop);
+        };
+        this.lifeRaf = requestAnimationFrame(loop);
+      }
+
+      // React to user being active (typing/sending). She "notices" and perks up a little.
+      reactToUserActivity(type = 'message') {
+        this.lastUserActivity = Date.now();
+        if (!this.spriteEl) return;
+
+        const el = this.spriteEl;
+        // small "lean in" / attention reaction
+        const boost = (type === 'message') ? 1.12 : 1.06;
+        const targetO = Math.min(0.48, (this.state.opacity || 0.22) * 1.25);
+        const origTransition = el.style.transitionDuration;
+
+        el.style.transitionDuration = '180ms';
+        el.style.opacity = String(targetO);
+
+        // nudge drift towards "conversation" (leftish if anchored right)
+        this.driftX -= (this.state.position.includes('right') ? 18 : -8);
+        this.driftVelX -= (this.state.position.includes('right') ? 0.06 : -0.04);
+
+        // light attention burst + livelier dust feel
+        setTimeout(() => {
+          try { this.burst(); } catch(_) {}
+          if (this.state.intensity < 0.9) {
+            this.setIntensity(Math.min(1.15, this.state.intensity * 1.15));
+          }
+        }, 80);
+
+        // settle back
+        setTimeout(() => {
+          if (el) {
+            el.style.transitionDuration = origTransition || '420ms';
+            el.style.opacity = String(this.state.opacity || 0.22);
+          }
+          // let breathing + autonomy take over again
+        }, 1400);
+      }
+
+      applyCommand(cmd) {
+        if (!cmd || !cmd.type) return;
+        const t = String(cmd.type).toLowerCase().replace(/-/g, '_');
+        let v = cmd.value;
+        if (Array.isArray(v)) v = v[0];
+        if (t === 'set_form' || t === 'form') this.setForm(v);
+        else if (t === 'set_opacity' || t === 'opacity') this.setOpacity(v);
+        else if (t === 'set_position' || t === 'position') this.setPosition(v);
+        else if (t === 'set_intensity' || t === 'intensity') this.setIntensity(v);
+        else if (t === 'set_scale' || t === 'scale') this.setScale(v);
+        else if (t === 'burst_particles' || t === 'burst') this.burst();
+        else if (t === 'random_change' || t === 'random') this.randomShift();
+      }
+    }
+
+    // === Thin wrappers / old API compatibility (so existing calls keep working) ===
+    let _violettaAmbientMgr = null;
+
+    function getAmbientMgr() {
+      return _violettaAmbientMgr || (window.violettaAmbient);
+    }
+
+    async function initParticles(override) {
+      const m = getAmbientMgr();
+      if (m && m.initParticles) return m.initParticles(override);
+    }
+
+    function triggerParticleBurst(el) {
+      const m = getAmbientMgr();
+      if (m && m.burst) m.burst();
+    }
+
+    async function updateAmbientPresence(spriteUrl, withBurst = true) {
+      // Legacy/fallback for history replay. Real commands go through manager.setForm for transitions + state.
+      const img = document.getElementById('ambient-sprite');
+      if (img && spriteUrl) {
+        img.style.transitionDuration = '280ms';
+        img.style.opacity = '0.015';
+        setTimeout(() => {
+          img.src = spriteUrl;
+          const m2 = getAmbientMgr();
+          const o = (m2 && m2.state && m2.state.opacity) ? m2.state.opacity : 0.22;
+          img.style.opacity = String(o);
+          if (withBurst && m2 && typeof m2.burst === 'function') {
+            setTimeout(() => { try { m2.burst(); } catch(_){} }, 90);
+          }
+          // bubble
+          const bub = document.getElementById('bubble-sprite');
+          if (bub) bub.src = spriteUrl;
+        }, 220);
+      }
+    }
+
+    function setAmbientFromChatSprite(spriteUrl, withTransition = true) {
+      if (!spriteUrl) return;
+      updateAmbientPresence(spriteUrl, withTransition);
+    }
+
+    // Config helpers now delegate to manager when available
+    function loadAmbientConfig() { /* manager loads inside init */ }
+    function saveAmbientConfig() { const m = getAmbientMgr(); if (m) m.saveToStorage(); }
+
+    function applyAmbientConfigFromUI() {
+      const m = getAmbientMgr();
+      const i = parseFloat(document.getElementById('cfg-intensity')?.value || 0.65);
+      const o = parseFloat(document.getElementById('cfg-opacity')?.value || 0.22);
+      const s = parseFloat(document.getElementById('cfg-scale')?.value || 1.0);
+      if (m) {
+        m.setIntensity(i);
+        m.setOpacity(o);
+        m.setScale(s);
+      }
+      updateConfigLabels();
+    }
+
+    function updateConfigLabels() {
+      const m = getAmbientMgr();
+      const st = (m && m.state) || { intensity: 0.65, opacity: 0.22, scale: 1.0 };
+      const vi = document.getElementById('val-intensity');
+      const vo = document.getElementById('val-opacity');
+      const vs = document.getElementById('val-scale');
+      const ci = document.getElementById('cfg-intensity');
+      const co = document.getElementById('cfg-opacity');
+      const cs = document.getElementById('cfg-scale');
+      if (ci) ci.value = st.intensity;
+      if (co) co.value = st.opacity;
+      if (cs) cs.value = st.scale || 1;
+      if (vi) vi.textContent = (st.intensity||0).toFixed(2);
+      if (vo) vo.textContent = (st.opacity||0).toFixed(2);
+      if (vs) vs.textContent = (st.scale||1).toFixed(1);
+    }
+
+    function setupConfigListeners() { /* same as before, but calls apply */ 
+      const ids = ['cfg-intensity', 'cfg-opacity', 'cfg-scale'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.oninput = () => {
+          const v = parseFloat(el.value);
+          if (id === 'cfg-intensity') document.getElementById('val-intensity').textContent = v.toFixed(2);
+          if (id === 'cfg-opacity') document.getElementById('val-opacity').textContent = v.toFixed(2);
+          if (id === 'cfg-scale') document.getElementById('val-scale').textContent = v.toFixed(1);
+        };
+        el.onchange = () => applyAmbientConfigFromUI();
+      });
+    }
+
+    function toggleAmbientConfig() { /* unchanged UI logic */ 
+      const panel = document.getElementById('ambient-config');
+      if (!panel) return;
+      const isHidden = panel.classList.contains('hidden');
+      if (isHidden) {
+        panel.classList.remove('hidden'); panel.classList.add('flex');
+        updateConfigLabels(); setupConfigListeners();
+      } else hideAmbientConfig();
+    }
+    function hideAmbientConfig() {
+      const panel = document.getElementById('ambient-config');
+      if (panel) { panel.classList.add('hidden'); panel.classList.remove('flex'); }
+    }
+    function resetAmbientConfig() {
+      const m = getAmbientMgr();
+      if (m) {
+        m.setIntensity(0.65); m.setOpacity(0.22); m.setScale(1.0); m.setPosition('bottom-right');
+      }
+      updateConfigLabels();
+    }
+    function applyAmbientConfig() { updateConfigLabels(); }
+
+    // Main entry — creates the manager
+    async function initAmbientLayer() {
+      _violettaAmbientMgr = new ViolettaAmbient();
+      await _violettaAmbientMgr.init();
+
+      // start the autonomy "law of randomness" loop (she acts on her own)
+      startAutonomyLoop();
+
+      // initial labels
+      setTimeout(updateConfigLabels, 300);
+    }
+
+    // === Draggable floating window + collapse to bubble ===
+    function makeDraggable() {
+      const win = document.getElementById('chat-window');
+      const handle = document.getElementById('chat-header');
+      if (!win || !handle) return;
+
+      let dragging = false;
+      let offsetX = 0, offsetY = 0;
+
+      handle.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) return;
+        dragging = true;
+        const rect = win.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        win.style.transition = 'none';
+        document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        let nl = e.clientX - offsetX;
+        let nt = e.clientY - offsetY;
+        // keep in viewport
+        nl = Math.max(8, Math.min(nl, window.innerWidth - win.offsetWidth - 8));
+        nt = Math.max(8, Math.min(nt, window.innerHeight - win.offsetHeight - 8));
+        win.style.left = nl + 'px';
+        win.style.top = nt + 'px';
+        win.style.transform = 'none';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (dragging) {
+          dragging = false;
+          document.body.style.userSelect = '';
+          win.style.transition = '';
+          try {
+            localStorage.setItem('violetta_chat_pos', JSON.stringify({ left: win.style.left, top: win.style.top }));
+          } catch (e) {}
+        }
+      });
+    }
+
+    function makeBubbleDraggable() {
+      const bub = document.getElementById('chat-bubble');
+      if (!bub) return;
+
+      let dragging = false;
+      let ox = 0, oy = 0;
+
+      bub.addEventListener('mousedown', (e) => {
+        dragging = true;
+        const r = bub.getBoundingClientRect();
+        ox = e.clientX - r.left;
+        oy = e.clientY - r.top;
+        document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        let nl = e.clientX - ox;
+        let nt = e.clientY - oy;
+        nl = Math.max(4, Math.min(nl, window.innerWidth - bub.offsetWidth - 4));
+        nt = Math.max(4, Math.min(nt, window.innerHeight - bub.offsetHeight - 4));
+        bub.style.left = nl + 'px';
+        bub.style.top = nt + 'px';
+        bub.style.right = 'auto';
+        bub.style.bottom = 'auto';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (dragging) {
+          dragging = false;
+          document.body.style.userSelect = '';
+          try {
+            localStorage.setItem('violetta_bubble_pos', JSON.stringify({ left: bub.style.left, top: bub.style.top }));
+          } catch (e) {}
+        }
+      });
+    }
+
+    function toggleChatCollapse() {
+      const win = document.getElementById('chat-window');
+      let bub = document.getElementById('chat-bubble');
+      const collapsed = win.style.display === 'none';
+
+      if (!collapsed) {
+        // collapse
+        win.style.display = 'none';
+        if (!bub) {
+          // shouldn't happen
+          return;
+        }
+        bub.style.display = 'block';
+        // apply saved bubble pos or default near ambient
+        const bpos = localStorage.getItem('violetta_bubble_pos');
+        if (bpos) {
+          try {
+            const p = JSON.parse(bpos);
+            if (p.left) bub.style.left = p.left;
+            if (p.top) bub.style.top = p.top;
+            bub.style.right = 'auto';
+            bub.style.bottom = 'auto';
+          } catch(e) {}
+        } else {
+          // default position near bottom right (close to ambient sprite)
+          bub.style.left = 'auto';
+          bub.style.right = '3.5vw';
+          bub.style.top = 'auto';
+          bub.style.bottom = '5vh';
+        }
+        localStorage.setItem('violetta_chat_collapsed', 'true');
+      } else {
+        win.style.display = '';
+        if (bub) bub.style.display = 'none';
+        localStorage.setItem('violetta_chat_collapsed', 'false');
+        // restore window pos
+        const pos = localStorage.getItem('violetta_chat_pos');
+        if (pos) {
+          try {
+            const p = JSON.parse(pos);
+            if (p.left) win.style.left = p.left;
+            if (p.top) win.style.top = p.top;
+            win.style.transform = 'none';
+          } catch(e) {}
+        }
+      }
+    }
+
+    function restoreChatUI() {
+      const win = document.getElementById('chat-window');
+      const bub = document.getElementById('chat-bubble');
+      const pos = localStorage.getItem('violetta_chat_pos');
+      const isColl = localStorage.getItem('violetta_chat_collapsed') === 'true';
+
+      if (pos && win) {
+        try {
+          const p = JSON.parse(pos);
+          if (p.left) win.style.left = p.left;
+          if (p.top) win.style.top = p.top;
+          win.style.transform = 'none';
+        } catch(e) {}
+      } else if (win) {
+        // default floating position
+        win.style.left = '50%';
+        win.style.top = '9vh';
+        win.style.transform = 'translateX(-50%)';
+      }
+
+      if (isColl && win && bub) {
+        win.style.display = 'none';
+        bub.style.display = 'block';
+        const bpos = localStorage.getItem('violetta_bubble_pos');
+        if (bpos) {
+          try {
+            const p = JSON.parse(bpos);
+            if (p.left) { bub.style.left = p.left; bub.style.right = 'auto'; }
+            if (p.top) { bub.style.top = p.top; bub.style.bottom = 'auto'; }
+          } catch(e) {}
+        }
+      } else if (win && bub) {
+        win.style.display = '';
+        bub.style.display = 'none';
+      }
+    }
+
+    // === Autonomy loop (Закон случайности) ===
+    // Violetta occasionally decides on her own to shift her visual presence.
+    // Runs in background even if user is silent. Purely client-side for now (tab open = she is "awake").
+    let _autonomyTimer = null;
+    function startAutonomyLoop() {
+      function tick() {
+        if (document.hidden) { // don't act when tab is asleep
+          schedule();
+          return;
+        }
+        const mgr = window.violettaAmbient || getAmbientMgr();
+        if (!mgr) { schedule(); return; }
+
+        const idle = Date.now() - (mgr.lastUserActivity || Date.now());
+        const longIdle = idle > 90000;
+
+        // Base chance she does something noticeable
+        let chance = longIdle ? 0.28 : 0.19;
+
+        if (Math.random() < chance) {
+          try {
+            // When very idle for a while, prefer "quiet living" over big form jumps
+            if (longIdle && Math.random() < 0.65) {
+              // subtle oживление: stronger micro-drift kick, dust/intensity breathe, small position feel
+              mgr.driftVelX = (mgr.driftVelX || 0) + (Math.random() - 0.5) * 0.11;
+              mgr.driftVelY = (mgr.driftVelY || 0) + (Math.random() - 0.5) * 0.09;
+              if (Math.random() < 0.4) {
+                const ni = Math.max(0.18, Math.min(1.0, (mgr.state.intensity || 0.65) + (Math.random() - 0.5) * 0.28));
+                mgr.setIntensity(ni);
+              }
+              if (Math.random() < 0.35) {
+                mgr.burst();
+              }
+              // occasional very quiet "settle or stretch" to new micro-spot (via position or drift)
+              if (Math.random() < 0.25) {
+                const posKeys = Object.keys(mgr.POSITIONS || {});
+                if (posKeys.length) {
+                  const np = posKeys[Math.floor(Math.random() * posKeys.length)];
+                  mgr.setPosition(np);
+                }
+              }
+            } else {
+              mgr.randomShift();
+            }
+            // rare double stir
+            if (Math.random() < 0.12) {
+              setTimeout(() => { try { mgr.randomShift(); } catch(_){} }, 520);
+            }
+          } catch (e) {}
+        } else if (longIdle && Math.random() < 0.09) {
+          // even on "no big action" ticks when idle, give her a tiny living sigh (drift + light breath kick)
+          try {
+            mgr.driftVelX = (mgr.driftVelX || 0) + (Math.random() - 0.5) * 0.06;
+            mgr.driftVelY = (mgr.driftVelY || 0) + (Math.random() - 0.5) * 0.05;
+          } catch(_) {}
+        }
+        schedule();
+      }
+      function schedule() {
+        const delay = 42000 + Math.random() * 78000; // 42–120s
+        if (_autonomyTimer) clearTimeout(_autonomyTimer);
+        _autonomyTimer = setTimeout(tick, delay);
+      }
+      // kick off
+      schedule();
+      console.log('%c[ambient] autonomy + life loop active — she breathes, drifts, and occasionally stirs on her own (even when you are silent)', 'color:#713f12');
+    }
+
     // Keyboard + initial load
     function init() {
       initTailwind();
@@ -678,6 +1875,32 @@
       
       // Show the actual model from backend (e2b / e4b etc.)
       loadCurrentModel();
+      
+      // Ambient dust + form presence (after model for any timing)
+      initAmbientLayer();
+      
+      // Floating chat setup (draggable, collapsible, restore pos/state)
+      makeDraggable();
+      makeBubbleDraggable();
+      restoreChatUI();
+      
+      // ensure bubble sprite matches current presence
+      setTimeout(() => {
+        const mgr = window.violettaAmbient || getAmbientMgr();
+        const bub = document.getElementById('bubble-sprite');
+        if (mgr && mgr.state && mgr.state.spriteUrl && bub) {
+          bub.src = mgr.state.spriteUrl;
+        }
+      }, 380);
+
+      // small initial dust "hello" near the (empty) chat area on first load
+      setTimeout(() => {
+        const mgr = window.violettaAmbient || getAmbientMgr();
+        const chatArea = document.getElementById('chat');
+        if (mgr && chatArea && typeof mgr.spawnDustNear === 'function' && chatArea.children.length < 3) {
+          mgr.spawnDustNear(chatArea, 3);
+        }
+      }, 900);
       
       // Focus input
       const input = document.getElementById('input');

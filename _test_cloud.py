@@ -45,7 +45,7 @@ def strip_visible_leaks(text: str) -> str:
     return t or "..."
 
 def get_form_key(raw_text: str) -> str:
-    key, _ = parse_form_from_response(raw_text)
+    res = parse_form_from_response(raw_text); key = res[0] if res else "pine_marten"
     return key or "pine_marten"
 
 def main():

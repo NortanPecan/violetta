@@ -22,6 +22,7 @@ Async wrappers so chat stays responsive.
 import os
 import re
 import asyncio
+import random
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 
@@ -96,7 +97,8 @@ def _strip_form_sentence(text: str) -> str:
     if not text:
         return ""
     try:
-        form_desc, rest = parse_form_from_response(text)
+        res = parse_form_from_response(text)
+        form_desc, rest = res[0], res[1] if len(res) > 1 else ""
         if rest and len(rest.strip()) > 12:
             return rest.strip()
     except Exception:
@@ -148,11 +150,12 @@ def _extract_personal_insights(cleaned_messages: list) -> list[str]:
     transcript = "\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in cleaned_messages)
 
     prompt = (
-        "Извлеки из этого фрагмента разговора 1-3 самых важных и эмоционально значимых личных инсайта, страхов, паттернов или осознаний.\n\n"
+        "Извлеки из этого фрагмента разговора 1-3 самых важных инсайта, страхов или осознаний. "
+        "Держись ближе к прямым словам пользователя и фактам, которые он явно сказал. "
+        "Избегай сильных психологических интерпретаций, 'анализа' или добавления чувства вины, если пользователь его явно не выражал.\n\n"
         "Пиши строго от первого лица, как будто это мои собственные мысли и чувства прямо сейчас. "
-        "Коротко (одно предложение идеально, максимум два), точно, без воды, без советов, без 'важно'. "
-        "Сохраняй живой, естественный язык.\n\n"
-        "Хорошие примеры желаемого стиля:\n"
+        "Коротко (одно предложение идеально, максимум два), точно, без воды, без советов, без 'важно'.\n\n"
+        "Хорошие примеры желаемого стиля (нейтрально и близко к словам):\n"
         "- Я боюсь, что снова брошу проект на полпути и почувствую себя неудачником.\n"
         "- Поиск себя для меня сейчас = страх обнаружить, что внутри ничего нет.\n"
         "- Когда я сажусь работать, сразу включается внутренний голос, что это бесполезно и я всё равно брошу.\n\n"
@@ -363,6 +366,11 @@ async def extract_and_save_memories(messages: List[Dict[str, str]]) -> int:
     if not messages:
         return 0
 
+    # Speed optimization: skip extraction on very short messages most of the time
+    last_user = next((m for m in reversed(messages) if m.get("role") == "user"), None)
+    if last_user and len(last_user.get("content", "")) < 20 and random.random() > 0.35:
+        return 0
+
     cleaned = _clean_messages_for_memory(messages)
     if not cleaned:
         return 0
@@ -377,6 +385,8 @@ async def extract_and_save_memories(messages: List[Dict[str, str]]) -> int:
         kept = 0
         for insight in insights:
             if _is_memory_noise(insight):
+                continue
+            if _is_duplicate_memory(mem, insight, USER_ID):
                 continue
             try:
                 # Feed the already-perfect first-person text.
@@ -455,6 +465,11 @@ async def extract_and_save_violetta_memories(messages: List[Dict[str, str]]) -> 
     if not messages:
         return 0
 
+    # Speed optimization: skip on short messages
+    last_user = next((m for m in reversed(messages) if m.get("role") == "user"), None)
+    if last_user and len(last_user.get("content", "")) < 20 and random.random() > 0.35:
+        return 0
+
     # Prepare transcript biased to Violetta's voice
     prepared = []
     for m in messages:
@@ -481,6 +496,8 @@ async def extract_and_save_violetta_memories(messages: List[Dict[str, str]]) -> 
         kept = 0
         for insight in insights:
             if _is_memory_noise(insight):
+                continue
+            if _is_duplicate_memory(mem, insight, VIOLETTA_USER_ID):
                 continue
             try:
                 mem.add([{"role": "user", "content": insight}], user_id=VIOLETTA_USER_ID)
@@ -510,17 +527,33 @@ def get_violetta_user_id() -> str:
     return VIOLETTA_USER_ID
 
 
+def _is_duplicate_memory(mem: Memory, insight: str, user_id: str) -> bool:
+    """Cheap dedup to prevent memory bloat (which slows down searches)."""
+    if not insight or len(insight) < 15:
+        return True
+    try:
+        res = mem.search(insight, user_id=user_id, limit=1)
+        if res and isinstance(res, list) and len(res) > 0:
+            existing = (res[0].get("memory") or res[0].get("text") or "").strip()
+            if existing and (insight.lower() in existing.lower() or existing.lower() in insight.lower()):
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def format_violetta_memories_for_prompt(memories: List[Dict]) -> str:
-    """Format Violetta's memories for injection into prompt."""
+    """Format Violetta's memories for injection into prompt. Limit for speed."""
     if not memories:
         return ""
+    memories = memories[:2]
     lines = []
     for m in memories:
         text = m.get("memory") or m.get("text") or str(m)
         lines.append(f"- {text.strip()}")
-    block = "=== Мои личные воспоминания (Violetta Personal Memory) ===\n"
+    block = "=== Мои личные воспоминания (Violetta) ===\n"
     block += "\n".join(lines)
-    block += "\n\nИспользуй естественно, чтобы я звучала как полноценная личность с собственной историей и отношением к Женьку. Иногда ссылайся напрямую."
+    block += "\n\nИспользуй естественно, чтобы я звучала как личность. Иногда ссылайся."
     return block
 
 
@@ -608,19 +641,17 @@ async def remove_noisy_memories() -> int:
 # ---------------- Helpers for prompt injection ----------------
 
 def format_memories_for_prompt(memories: List[Dict]) -> str:
-    """Turn search results into a clean block for the system prompt."""
+    """Turn search results into a clean block for the system prompt. Limit to top 2-3 for speed."""
     if not memories:
         return ""
-
+    memories = memories[:3]  # hard cap for prompt size/speed
     lines = []
     for m in memories:
         text = m.get("memory") or m.get("text") or str(m)
-        # Mem0 sometimes returns 'categories' or metadata — keep simple
         lines.append(f"- {text.strip()}")
-
     block = "=== Долгосрочные воспоминания (Mem0) ===\n"
     block += "\n".join(lines)
-    block += "\n\nИспользуй их естественно и только когда они реально помогают понять текущую эмоцию, цель, паттерн или противоречие. Не перечисляй память ради перечисления."
+    block += "\n\nИспользуй их естественно и только когда они реально помогают понять текущую эмоцию, цель, паттерн или противоречие. Не перечисляй."
     return block
 
 
