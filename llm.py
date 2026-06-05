@@ -28,7 +28,8 @@ OLLAMA_MAX_TOKENS = int(os.getenv("OLLAMA_MAX_TOKENS", "380"))
 # Runtime current model (allows switch without server restart for same backend group)
 _current_model = os.getenv("OLLAMA_MODEL", "gemma4:31b-cloud")
 
-# Known cloud models (offered in switcher; :cloud suffix means ollama-hosted, proxied via local ollama serve)
+# Known ollama-hosted cloud models (offered in switcher). These still go through local ollama serve as proxy in the default setup.
+# For direct OpenAI-compatible providers (Groq, Together, OpenRouter, Fireworks etc.) just set OLLAMA_BASE_URL and OLLAMA_API_KEY + any model name — the key will be used automatically.
 KNOWN_CLOUD_MODELS = [
     "gemma4:31b-cloud",
     "nemotron-3-super:cloud",
@@ -53,10 +54,10 @@ def get_client(async_client: bool = False) -> OpenAI | AsyncOpenAI:
         model = XAI_MODEL
     else:
         base_url = OLLAMA_BASE_URL
-        api_key = "ollama"  # Ollama ignores the key for local
+        # Always prefer real key if provided (works for Ollama local/cloud + any other OpenAI-compatible provider like Groq, Together, OpenRouter etc.)
+        # For pure local ollama without key it falls back to "ollama" (which is ignored anyway).
+        api_key = OLLAMA_API_KEY or "ollama"
         model = get_model_name()
-        if get_backend() == "cloud":
-            api_key = OLLAMA_API_KEY or "ollama"  # use real key if set for ollama cloud subscription models
 
     ClientClass = AsyncOpenAI if async_client else OpenAI
     return ClientClass(api_key=api_key, base_url=base_url)
